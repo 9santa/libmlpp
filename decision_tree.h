@@ -18,12 +18,12 @@ struct Sample {
 class DecisionTree {
 private:
     struct Node {
-        bool isLeaf;
+        bool isLeaf = true;
         std::vector<double> probs; // size K; K - total number of classes
         int predictedClass = -1; // argmax of probs
 
         int splitFeatureIdx = -1; // column index of a feature
-        double splitValue;
+        double splitValue = 0.0;
 
         std::unique_ptr<Node> left = nullptr;
         std::unique_ptr<Node> right = nullptr;
@@ -33,7 +33,9 @@ private:
         int featureIdx = -1;
         double threshold = 0.0;
         double score = 0.0;
-        bool valid = true;
+        bool valid = false;
+        std::vector<Sample> left;
+        std::vector<Sample> right;
     };
 
 
@@ -130,6 +132,25 @@ inline std::unique_ptr<DecisionTree::Node> DecisionTree::buildTree(const std::ve
     node->probs = classProbs(data);
     node->predictedClass = argmaxClass(node->probs);
 
+    if (depth >= maxDepth || giniImpurity(data) == 0.0) {
+        return node;
+    }
+
+    SplitInfo split = findBestSplit(data);
+    if (!split.valid) {
+        return node;
+    }
+
+    if (split.left.empty() || split.right.empty()) {
+        return node;
+    }
+
+    node->isLeaf = false;
+    node->splitFeatureIdx = split.featureIdx;
+    node->splitValue = split.threshold;
+    node->left = buildTree(split.left, depth + 1);
+    node->right = buildTree(split.right, depth + 1);
+
     return node;
 }
 
@@ -145,6 +166,7 @@ inline std::pair<std::vector<Sample>, std::vector<Sample>> splitSamples(const st
 }
 
 inline DecisionTree::SplitInfo DecisionTree::findBestSplit(const std::vector<Sample>& data) const {
+
     SplitInfo best;
     best.score = std::numeric_limits<double>::infinity();
 
@@ -153,6 +175,11 @@ inline DecisionTree::SplitInfo DecisionTree::findBestSplit(const std::vector<Sam
     }
 
     const int numFeatures = static_cast<int>(data[0].features.size());
+    for (const auto& sample : data) {
+        if (static_cast<int>(sample.features.size()) != numFeatures) {
+            throw std::runtime_error("Feature dimensions mismatch in training data.");
+        }
+    }
 
     for (int featIdx = 0; featIdx < numFeatures; featIdx++) {
         std::vector<double> values;
@@ -184,6 +211,8 @@ inline DecisionTree::SplitInfo DecisionTree::findBestSplit(const std::vector<Sam
                 best.featureIdx = featIdx;
                 best.threshold = threshold;
                 best.valid = true;
+                best.left = std::move(left);
+                best.right = std::move(right);
             }
         }
     }
