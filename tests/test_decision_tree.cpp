@@ -1,6 +1,27 @@
 #include <iostream>
 #include "../decision_tree.h"
 
+
+void test_with_xor() {
+    std::vector<Sample> xor_dataset = {
+        {{0.0, 1.0}, 1},
+        {{0.0, 0.0}, 0},
+        {{1.0, 1.0}, 0},
+        {{1.0, 0.0}, 1}
+    };
+
+    DecisionTree tree(2, 2);
+    tree.fit(xor_dataset);
+
+    std::cout << "\nXOR test\n";
+    for (const auto& s : xor_dataset) {
+        auto pred = tree.predict(s.features);
+        std::cout << "True label: " << s.label << "\n";
+        std::cout << "Prediction: " << pred << "\n";
+    }
+}
+
+
 int main() {
     std::vector<Sample> train = {
         {{0.10, 1.0}, 0},
@@ -46,6 +67,8 @@ int main() {
               << " proba = [" << p1[0] << ", " << p1[1] << "]\n";
     std::cout << "test2 pred = " << tree.predict(test2)
               << " proba = [" << p2[0] << ", " << p2[1] << "]\n";
+
+    test_with_xor();
 
     return 0;
 }
