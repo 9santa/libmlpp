@@ -2,7 +2,14 @@
 
 #pragma once
 
+#include <stdexcept>
 class BinaryLoss {
+protected:
+    void validateLabel(int y) const {
+        if (y != 1 && y != -1) {
+            throw std::runtime_error("Binary loss function expects labels -1 or +1");
+        }
+    }
 public:
     virtual ~BinaryLoss() = default;
 

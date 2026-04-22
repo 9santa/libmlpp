@@ -5,19 +5,13 @@
 class PerceptronLoss : public BinaryLoss {
 public:
     double value(int y, double score) const override {
-        if (y != 1 && y != -1) {
-            throw std::runtime_error("PerceptronLoss expects labels -1 or +1");
-        }
-
+        validateLabel(y);
         double margin = y * score;
         return (margin <= 0.0) ? (-margin) : 0.0;
     }
 
     double dscore(int y, double score) const override {
-        if (y != 1 && y != -1) {
-            throw std::runtime_error("PerceptronLoss expects labels -1 or +1");
-        }
-
+        validateLabel(y);
         double margin = y * score;
         return (margin <= 0.0) ? static_cast<double>(-y) : 0.0;
     }
