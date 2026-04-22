@@ -12,7 +12,6 @@ public:
         return hinge;
     }
 
-
     double dscore(int y, double score) const override {
         validateLabel(y);
         double margin = y * score;

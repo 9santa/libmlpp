@@ -14,12 +14,12 @@ public:
     }
 
     double value(const std::vector<double>& w) const override {
-        double sum = 0.0;
+        double l2norm_wi = 0.0;
         for (auto wi : w) {
-            sum += wi * wi;
+            l2norm_wi += wi * wi;
         }
         // 0.5 for convenience
-        return 0.5 * lambda_ * sum;
+        return 0.5 * lambda_ * l2norm_wi;
     }
 
     void addGradient(const std::vector<double>& w,
