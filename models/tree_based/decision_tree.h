@@ -1,28 +1,24 @@
-/* File: decision_tree.h */
 #pragma once
+
+#include "dataset.h"
 
 #include <algorithm>
 #include <cmath>
 #include <iterator>
 #include <limits>
-#include <stdexcept>
-#include <vector>
 #include <memory>
-
-
-struct Sample {
-    std::vector<double> features;
-    int label;
-};
+#include <stdexcept>
+#include <utility>
+#include <vector>
 
 class DecisionTree {
 private:
     struct Node {
         bool isLeaf = true;
-        std::vector<double> probs; // size K; K - total number of classes
-        int predictedClass = -1; // argmax of probs
+        std::vector<double> probs;
+        int predictedClass = -1;
 
-        int splitFeatureIdx = -1; // column index of a feature
+        int splitFeatureIdx = -1;
         double splitValue = 0.0;
 
         std::unique_ptr<Node> left = nullptr;
@@ -37,7 +33,6 @@ private:
         std::vector<Sample> left;
         std::vector<Sample> right;
     };
-
 
     std::unique_ptr<Node> root = nullptr;
     int maxDepth;
@@ -56,13 +51,13 @@ private:
     const Node* traverse(const Node* node, const std::vector<double>& features) const;
 
 public:
-    explicit DecisionTree(int _maxDepth = 3, int _numClasses = 2) : maxDepth(_maxDepth), numClasses(_numClasses) {}
+    explicit DecisionTree(int _maxDepth = 3, int _numClasses = 2)
+        : maxDepth(_maxDepth), numClasses(_numClasses) {}
 
     void fit(const std::vector<Sample>& data);
     int predict(const std::vector<double>& features) const;
     std::vector<double> predictProba(const std::vector<double>& features) const;
 };
-
 
 inline std::vector<int> DecisionTree::classCounts(const std::vector<Sample>& data) const {
     std::vector<int> counts(numClasses, 0);
@@ -80,26 +75,29 @@ inline std::vector<int> DecisionTree::classCounts(const std::vector<Sample>& dat
 inline std::vector<double> DecisionTree::classProbs(const std::vector<Sample>& data) const {
     std::vector<double> probs(numClasses, 0.0);
 
-    if (data.empty()) return probs;
+    if (data.empty()) {
+        return probs;
+    }
 
     std::vector<int> counts = classCounts(data);
-    const double N = static_cast<double>(data.size());
+    const double n = static_cast<double>(data.size());
 
     for (int k = 0; k < numClasses; k++) {
-        probs[k] = counts[k] / N;
+        probs[k] = counts[k] / n;
     }
 
     return probs;
 }
 
-
 inline int DecisionTree::argmaxClass(const std::vector<double>& probs) const {
-    auto dist = std::distance(probs.begin(), std::max_element(probs.begin(), probs.end())); // returns std::ptrdiff_t
+    auto dist = std::distance(probs.begin(), std::max_element(probs.begin(), probs.end()));
     return static_cast<int>(dist);
 }
 
 inline double DecisionTree::giniImpurity(const std::vector<Sample>& data) const {
-    if (data.empty()) return 0.0;
+    if (data.empty()) {
+        return 0.0;
+    }
 
     std::vector<double> probs = classProbs(data);
 
@@ -112,20 +110,25 @@ inline double DecisionTree::giniImpurity(const std::vector<Sample>& data) const 
 }
 
 inline double DecisionTree::entropyImpurity(const std::vector<Sample>& data) const {
-    if (data.empty()) return 0.0;
+    if (data.empty()) {
+        return 0.0;
+    }
 
     std::vector<double> probs = classProbs(data);
 
     double entropy = 0.0;
     for (auto p : probs) {
-        if (p > 0.0)
+        if (p > 0.0) {
             entropy -= p * std::log(p);
+        }
     }
 
     return entropy;
 }
 
-inline std::unique_ptr<DecisionTree::Node> DecisionTree::buildTree(const std::vector<Sample>& data, int depth) {
+inline std::unique_ptr<DecisionTree::Node> DecisionTree::buildTree(
+    const std::vector<Sample>& data,
+    int depth) {
     auto node = std::make_unique<Node>();
 
     node->isLeaf = true;
@@ -137,11 +140,7 @@ inline std::unique_ptr<DecisionTree::Node> DecisionTree::buildTree(const std::ve
     }
 
     SplitInfo split = findBestSplit(data);
-    if (!split.valid) {
-        return node;
-    }
-
-    if (split.left.empty() || split.right.empty()) {
+    if (!split.valid || split.left.empty() || split.right.empty()) {
         return node;
     }
 
@@ -154,19 +153,25 @@ inline std::unique_ptr<DecisionTree::Node> DecisionTree::buildTree(const std::ve
     return node;
 }
 
-inline std::pair<std::vector<Sample>, std::vector<Sample>> splitSamples(const std::vector<Sample>& data, int splitFeatureIdx, double splitValue) {
+inline std::pair<std::vector<Sample>, std::vector<Sample>> splitSamples(
+    const std::vector<Sample>& data,
+    int splitFeatureIdx,
+    double splitValue) {
     std::vector<Sample> left;
     std::vector<Sample> right;
+
     for (const auto& sample : data) {
-        if (sample.features[splitFeatureIdx] <= splitValue) left.push_back(sample);
-        else right.push_back(sample);
+        if (sample.features[splitFeatureIdx] <= splitValue) {
+            left.push_back(sample);
+        } else {
+            right.push_back(sample);
+        }
     }
 
     return {left, right};
 }
 
 inline DecisionTree::SplitInfo DecisionTree::findBestSplit(const std::vector<Sample>& data) const {
-
     SplitInfo best;
     best.score = std::numeric_limits<double>::infinity();
 
@@ -192,19 +197,22 @@ inline DecisionTree::SplitInfo DecisionTree::findBestSplit(const std::vector<Sam
         std::sort(values.begin(), values.end());
         values.erase(std::unique(values.begin(), values.end()), values.end());
 
-        if (values.size() < 2) continue;
+        if (values.size() < 2) {
+            continue;
+        }
 
         for (size_t i = 1; i < values.size(); i++) {
-            double threshold = 0.5 * (values[i-1] + values[i]); // middle value
+            double threshold = 0.5 * (values[i - 1] + values[i]);
 
             auto [left, right] = splitSamples(data, featIdx, threshold);
-            if (left.empty() || right.empty()) continue;
+            if (left.empty() || right.empty()) {
+                continue;
+            }
 
             double weightedGini = (
                 static_cast<double>(left.size()) * giniImpurity(left) +
                 static_cast<double>(right.size()) * giniImpurity(right))
-                / static_cast<double>(data.size()
-            );
+                / static_cast<double>(data.size());
 
             if (weightedGini < best.score) {
                 best.score = weightedGini;
@@ -220,7 +228,9 @@ inline DecisionTree::SplitInfo DecisionTree::findBestSplit(const std::vector<Sam
     return best;
 }
 
-inline const DecisionTree::Node* DecisionTree::traverse(const Node* node, const std::vector<double>& features) const {
+inline const DecisionTree::Node* DecisionTree::traverse(
+    const Node* node,
+    const std::vector<double>& features) const {
     if (node == nullptr) {
         throw std::runtime_error("Tree is empty.");
     }
@@ -254,5 +264,6 @@ inline void DecisionTree::fit(const std::vector<Sample>& data) {
     if (data.empty()) {
         throw std::runtime_error("Train data is empty.");
     }
+
     root = buildTree(data, 0);
 }

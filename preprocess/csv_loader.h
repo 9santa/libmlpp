@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../dataset.h"
+#include "dataset.h"
 #include <fstream>
 #include <sstream>
 #include <stdexcept>

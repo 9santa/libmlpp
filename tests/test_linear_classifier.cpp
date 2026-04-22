@@ -1,10 +1,23 @@
-#include "../linear_classifier.h"
-#include "../preprocess/csv_loader.h"
+#include "preprocess/csv_loader.h"
+#include "dataset.h"
+#include "models/linear_classifier.h"
+#include "regularization/l2_regularizer.h"
+#include "regularization/no_regularizer.h"
+#include "loss/perceptron_loss.h"
 #include <iostream>
 #include <random>
 
 void printAccuracy(int correct, int total) {
     std::cout << "Accuracy: " << static_cast<double>(correct) / total << "\n";
+}
+
+void printTruePredScore(const std::vector<Sample>& train, const LinearClassifier& clf) {
+    for (const auto& s : train) {
+        std::cout << "true=" << s.label
+                  << " pred=" << clf.predict(s.features)
+                  << " score=" << clf.score(s.features)
+                  << "\n";
+    }
 }
 
 std::vector<Sample> makeLinearRuleDataset(size_t nSamples) {
@@ -43,13 +56,21 @@ int main() {
 
     std::vector<Sample> train = loadDatasetCSV("binary_dataset.csv");
 
-    LinearClassifier clf(10);
-    clf.fit(train, 10, 0.5);
+    PerceptronLoss loss;
+    // L2Regularizer reg(0.001);
+    NoRegularizer reg;
+
+    LinearClassifier clf(10, loss, reg);
+
+    SGDOptions opts;
+    opts.epochs = 10;
+    opts.learningRate = 0.03;
+    opts.shuffleEachEpoch = false;
+
+    clf.fit(train);
 
     int correct = 0;
     for (const auto& sample : train) {
-        // std::cout << "x1, x2 = [" << sample.features[0] << ", " << sample.features[1] << "]; ";
-        // std::cout << "label = " << sample.label << "\n";
         int pred = clf.predict(sample.features);
         if (pred == sample.label) correct++;
     }
