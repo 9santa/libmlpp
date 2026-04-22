@@ -1,6 +1,6 @@
 #include "preprocess/csv_loader.h"
 #include "dataset.h"
-#include "models/linear_classifier.h"
+#include "models/linear/linear_classifier.h"
 #include "regularization/l2_regularizer.h"
 #include "regularization/no_regularizer.h"
 #include "loss/perceptron_loss.h"
@@ -54,11 +54,11 @@ int main() {
     // const int numSamples = 500;
     // std::vector<Sample> train1 = makeLinearRuleDataset(numSamples);
 
-    std::vector<Sample> train = loadDatasetCSV("binary_dataset.csv");
+    std::vector<Sample> train = loadDatasetCSV("tests/binary_dataset.csv");
 
     PerceptronLoss loss;
-    // L2Regularizer reg(0.001);
-    NoRegularizer reg;
+    L2Regularizer reg(0.001);
+    // NoRegularizer reg;
 
     LinearClassifier clf(10, loss, reg);
 
