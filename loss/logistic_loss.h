@@ -3,6 +3,7 @@
 #include "binary_loss.h"
 #include <cmath>
 
+// TODO: optimize formulas with softplus
 class LogisticLoss : public BinaryLoss {
 private:
     double sigmoid(double score) const {
