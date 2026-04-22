@@ -1,7 +1,7 @@
 #pragma once
 
 #include "dataset.h"
-#include "models/linear_model.h"
+#include "models/linear/linear_model.h"
 #include "loss/binary_loss.h"
 #include "regularization/regularizer.h"
 #include <algorithm>
