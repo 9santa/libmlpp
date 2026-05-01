@@ -28,23 +28,23 @@ private:
     }
 
 public:
-    explicit Conv2D(size_t kernel_size, size_t stride = 1, size_t padding = 0, unsigned int seed = 42)
-        : W_(std::vector<size_t>{kernel_size, kernel_size}),
+    explicit Conv2D(size_t kernelSize, size_t stride = 1, size_t padding = 0, unsigned int seed = 42)
+        : W_(std::vector<size_t>{kernelSize, kernelSize}),
           b_(std::vector<size_t>{1}),
-          kernelH_(kernel_size),
-          kernelW_(kernel_size),
+          kernelH_(kernelSize),
+          kernelW_(kernelSize),
           stride_(stride),
           padding_(padding) {
 
-        if (kernel_size == 0) {
+        if (kernelSize == 0) {
             throw std::runtime_error("Conv2D kernel size must be positive");
         }
         if (stride_ == 0) {
             throw std::runtime_error("Conv2D stride must be positive");
         }
 
-        // 'He' random weight initialiation
-        const double nin = static_cast<double>(kernel_size * kernel_size);
+        // 'He' random weight initialiation (normal distribution version): Var(W[i,j]) = 2/nin
+        const double nin = static_cast<double>(kernelSize * kernelSize);
         const double stddev = std::sqrt(2.0 / nin);
 
         std::mt19937 rng(seed);
