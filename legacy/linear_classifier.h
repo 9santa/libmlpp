@@ -1,7 +1,7 @@
 /* File: linear_classifier.h */
 #pragma once
 
-#include "dataset.h"
+#include "core/dataset.h"
 #include <cinttypes>
 #include <vector>
 #include <cstddef>

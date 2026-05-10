@@ -1,5 +1,5 @@
 #pragma once
-#include "dataset.h"
+#include "core/dataset.h"
 #include "loss/binary_loss.h"
 #include "regularization/regularizer.h"
 #include "models/linear/linear_model.h"
