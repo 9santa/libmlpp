@@ -1,7 +1,11 @@
 # Structure and Separation of concerns
 
+### core/
+Stores shared project types, such as dataset samples.
+
+
 ### models/
-Stores model parameters and can:
+Stores classical ML model parameters and can:
 - score(x)
 - predict(x)
 - applyGradient(...)
@@ -9,6 +13,19 @@ Stores model parameters and can:
 Does not know:
 - hinge, logistic, other loss functions
 - SGD
+
+
+### nn/
+Stores neural-network building blocks:
+- Tensor
+- Module
+- layers
+- losses
+- optimizers
+- reusable architectures
+
+Concrete reusable neural-network architectures live in `nn/architectures/`.
+Runnable training programs live in `examples/`.
 
 
 ### loss/
