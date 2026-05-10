@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "models/tree_based/decision_tree.h"
+#include "models/tree/decision_tree.h"
 
 
 void test_with_xor() {

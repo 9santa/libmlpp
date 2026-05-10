@@ -1,5 +1,5 @@
 #include "preprocess/csv_loader.h"
-#include "dataset.h"
+#include "core/dataset.h"
 #include "models/linear/linear_classifier.h"
 #include "regularization/l2_regularizer.h"
 #include "regularization/no_regularizer.h"

@@ -1,8 +1,8 @@
 #include <iostream>
 
-#include "lenet.h"
-#include "../../losses/softmax_cross_entropy.h"
-#include "../../optimizers/sgd.h"
+#include "nn/architectures/lenet.h"
+#include "nn/losses/softmax_cross_entropy.h"
+#include "nn/optimizers/sgd.h"
 
 int main() {
     nn::Sequential net = nn::makeLeNetMNIST(
