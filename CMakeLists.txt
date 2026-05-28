@@ -10,6 +10,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_library(libmlpp INTERFACE)
 target_include_directories(libmlpp INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
+# Train LeNet
 add_executable(train_lenet_mnist examples/train_lenet_mnist.cpp)
 target_link_libraries(train_lenet_mnist PRIVATE libmlpp)
 target_compile_definitions(train_lenet_mnist PRIVATE
@@ -31,3 +32,11 @@ add_mlpp_test(test_decision_tree tests/test_decision_tree.cpp)
 add_mlpp_test(test_linear_classifier tests/test_linear_classifier.cpp)
 add_mlpp_test(test_svm tests/test_svm.cpp)
 add_mlpp_test(test_lenet tests/test_lenet.cpp)
+
+
+# Train CBOW
+add_executable(train_cbow examples/train_cbow.cpp)
+target_link_libraries(train_cbow PRIVATE libmlpp)
+target_compile_definitions(train_cbow PRIVATE
+    MLPP_PROJECT_ROOT="${CMAKE_CURRENT_SOURCE_DIR}"
+)
