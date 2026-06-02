@@ -44,6 +44,7 @@ public:
         return data_.empty();
     }
 
+    std::vector<double>& data() { return data_; }
     const std::vector<double>& data() const { return data_; }
 
     void fill(double value) {
@@ -77,6 +78,28 @@ public:
             throw std::runtime_error("Tensor::at(i, j) requires 2D tensor");
         }
         return data_.at(i * shape_[1] + j);
+    }
+
+    double& at(size_t i, size_t j, size_t k) {
+        if (shape_.size() != 3) {
+            throw std::runtime_error("Tensor::at(i, j, k) requires 3D tensor");
+        }
+
+        const size_t J = shape_[1];
+        const size_t K = shape_[2];
+
+        return data_.at((i * J + j) * K + k);
+    }
+
+    const double& at(size_t i, size_t j, size_t k) const {
+        if (shape_.size() != 3) {
+            throw std::runtime_error("Tensor::at(i, j, k) requires 3D tensor");
+        }
+
+        const size_t J = shape_[1];
+        const size_t K = shape_[2];
+
+        return data_.at((i * J + j) * K + k);
     }
 
     double& at(size_t i, size_t j, size_t k, size_t h) {
