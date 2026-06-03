@@ -69,6 +69,18 @@ public:
         return add(gradInputForward, gradInputBackward);
     }
 
+    std::vector<Parameter*> parameters() override {
+        std::vector<Parameter*> params;
+
+        auto forwardParams = forwardRNN_.parameters();
+        auto backwardParams = backwardRNN_.parameters();
+
+        params.insert(params.end(), forwardParams.begin(), forwardParams.end());
+        params.insert(params.end(), backwardParams.begin(), backwardParams.end());
+
+        return params;
+    }
+
 };
 
 
