@@ -107,5 +107,57 @@ inline std::pair<Tensor, Tensor> splitLastDim3D(const Tensor& x) {
     return {left, right};
 }
 
+inline Tensor flattenBatchTime(const Tensor& x) {
+    if (x.ndim() != 3) {
+        throw std::runtime_error("flattenBatchTime expects [B, T, H]");
+    }
+
+    const size_t B = x.shape()[0];
+    const size_t T = x.shape()[1];
+    const size_t H = x.shape()[2];
+
+    Tensor out({B * T, H}, 0.0);
+
+    for (size_t n = 0; n < B; n++) {
+        for (size_t t = 0; t < T; t++) {
+            const size_t row = n * T + t;
+
+            for (size_t h = 0; h < H; h++) {
+                out.at(row, h) = x.at(n, t, h);
+            }
+        }
+    }
+
+    return out;
+}
+
+inline Tensor unflattenBatchTime(const Tensor& x,
+                                 size_t B,
+                                 size_t T) {
+    if (x.ndim() != 2) {
+        throw std::runtime_error("unflattenBatchTime expects [B * T, D]");
+    }
+
+    if (x.shape()[0] != B * T) {
+        throw std::runtime_error("unflattenBatchTime batch/time mismatch");
+    }
+
+    const size_t D = x.shape()[1];
+
+    Tensor out({B, T, D}, 0.0);
+
+    for (size_t n = 0; n < B; n++) {
+        for (size_t t = 0; t < T; t++) {
+            const size_t row = n * T + t;
+
+            for (size_t d = 0; d < D; d++) {
+                out.at(n, t, d) = x.at(row, d);
+            }
+        }
+    }
+
+    return out;
+}
+
 
 } // namespace nn
