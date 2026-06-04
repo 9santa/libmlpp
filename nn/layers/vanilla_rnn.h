@@ -22,6 +22,9 @@ private:
     Tensor inputCache_;  // [B, T, D]
     Tensor hiddenCache_; // [B, T, H]
 
+    Tensor h0Cache_;            // [B, H]
+    Tensor gradInitialHidden_;  // [B, H]
+
 public:
     VanillaRNN(size_t inputDim,
                size_t hiddenDim,
@@ -62,6 +65,15 @@ public:
             throw std::runtime_error("VanillaRNN expects input [B, T, D]");
         }
 
+        Tensor h0({x.shape()[0], hiddenDim_}, 0.0);
+        return forward(x, h0);
+    }
+
+    Tensor forward(const Tensor& x, const Tensor& h0) {
+        if (x.ndim() != 3) {
+            throw std::runtime_error("VanillaRNN expects input [B, T, D]");
+        }
+
         const size_t B = x.shape()[0];
         const size_t T = x.shape()[1];
         const size_t D = x.shape()[2];
@@ -70,12 +82,23 @@ public:
             throw std::runtime_error("VanillaRNN input dimension mismatch");
         }
 
+        if (h0.ndim() != 2 ||
+            h0.shape()[0] != B ||
+            h0.shape()[1] != hiddenDim_) {
+            throw std::runtime_error("VanillaRNN h0 must have shape [B, H]");
+        }
+
         inputCache_ = x;
+        h0Cache_ = h0;
         hiddenCache_ = Tensor({B, T, hiddenDim_}, 0.0);
 
         // Loop over sequences from the batch
         for (size_t n = 0; n < B; n++) {
             std::vector<double> hPrev(hiddenDim_, 0.0);
+
+            for (size_t h = 0; h < hiddenDim_; h++) {
+                hPrev[h] = h0.at(n, h);
+            }
 
             /* Move through time. At each timestep, we compute a new hidden vector
             from current input x_t and prev hidden state h_{t-1} */
@@ -132,6 +155,7 @@ public:
         }
 
         Tensor gradInput({B, T, D}, 0.0);
+        gradInitialHidden_ = Tensor({B, H}, 0.0);
 
         /*
             Backpropagation through time.
@@ -175,6 +199,8 @@ public:
 
                         if (t > 0) {
                             hPrevValue = hiddenCache_.at(n, t-1, hp);
+                        } else {
+                            hPrevValue = h0Cache_.at(n, hp);
                         }
 
                         Wh_.grad.at(h, hp) += da * hPrevValue;
@@ -184,6 +210,12 @@ public:
                 }
 
                 dhNext = dhPrev;
+            }
+
+            // Store the gradient wrt initial hidden,
+            // which is the total accumulated gradient of the loss through hidden states.
+            for (size_t h = 0; h < H; h++) {
+                gradInitialHidden_.at(n, h) = dhNext[h];
             }
         }
 
