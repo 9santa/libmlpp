@@ -27,7 +27,7 @@ inline std::vector<CBOWExample> makeCBOWExamples(
 
     for (size_t center = windowSize; center + windowSize < tokenIds.size(); center++) {
         CBOWExample ex;
-        ex.context.resize(2 * windowSize);
+        ex.context.reserve(2 * windowSize);
 
         for (size_t offset = windowSize; offset > 0; offset--) {
             ex.context.push_back(tokenIds[center - offset]);

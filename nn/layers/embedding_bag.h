@@ -3,16 +3,24 @@
 #include "nn/core/module.h"
 #include "nn/core/tensor.h"
 #include "nn/core/parameter.h"
+
+#include <cmath>
 #include <random>
 #include <stdexcept>
 
 
 namespace nn {
 
+enum class EmbeddingBagMode {
+    Sum,
+    Mean
+};
+
 class EmbeddingBag : public Module {
 private:
     size_t vocabSize_;
-    size_t embeddingDim_;   // maybe 300?
+    size_t embeddingDim_;
+    EmbeddingBagMode mode_;
 
     Parameter E_;           // [vocabSize, embeddingDim]
     Tensor inputCache_;     // [batch, contextSize], stores word ids as doubles
@@ -35,8 +43,15 @@ public:
     EmbeddingBag(size_t vocabSize,
                  size_t embeddingDim,
                  unsigned int seed = 42)
+        : EmbeddingBag(vocabSize, embeddingDim, EmbeddingBagMode::Sum, seed) {}
+
+    EmbeddingBag(size_t vocabSize,
+                 size_t embeddingDim,
+                 EmbeddingBagMode mode,
+                 unsigned int seed = 42)
         : vocabSize_(vocabSize),
           embeddingDim_(embeddingDim),
+          mode_(mode),
           E_(std::vector<size_t>{vocabSize, embeddingDim}) {
         if (vocabSize_ == 0) {
             throw std::runtime_error("EmbeddingBag vocabSize must be positive");
@@ -45,7 +60,6 @@ public:
             throw std::runtime_error("EmbeddingBag embeddingDim must be positive");
         }
 
-        // Random parameter initialization
         std::mt19937 rng(seed);
         double limit = 2.0 * static_cast<double>(embeddingDim_);
         std::uniform_real_distribution<double> dist(-limit, +limit);
@@ -70,13 +84,17 @@ public:
         inputCache_ = x;
 
         Tensor out({batchSize, embeddingDim_}, 0.0);
+        const double scale =
+            (mode_ == EmbeddingBagMode::Mean)
+                ? 1.0 / static_cast<double>(contextSize)
+                : 1.0;
 
         for (size_t n = 0; n < batchSize; n++) {
             for (size_t j = 0; j < contextSize; j++) {
                 size_t wordId = readId(x.at(n, j));
 
                 for (size_t d = 0; d < embeddingDim_; d++) {
-                    out.at(n, d) += E_.value.at(wordId, d);
+                    out.at(n, d) += E_.value.at(wordId, d) * scale;
                 }
             }
         }
@@ -100,7 +118,10 @@ public:
             throw std::runtime_error("EmbeddingBag gradOutput shape mismatch");
         }
 
-        double scale = 1.0;
+        const double scale =
+            (mode_ == EmbeddingBagMode::Mean)
+                ? 1.0 / static_cast<double>(contextSize)
+                : 1.0;
 
         for (size_t n = 0; n < batchSize; n++) {
             for (size_t j = 0; j < contextSize; j++) {
@@ -125,6 +146,8 @@ public:
     Parameter& embeddings() { return E_; }
 
     const Parameter& embeddings() const { return E_; }
+
+    EmbeddingBagMode mode() const { return mode_; }
 };
 
 

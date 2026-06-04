@@ -32,6 +32,7 @@ add_mlpp_test(test_decision_tree tests/test_decision_tree.cpp)
 add_mlpp_test(test_linear_classifier tests/test_linear_classifier.cpp)
 add_mlpp_test(test_svm tests/test_svm.cpp)
 add_mlpp_test(test_lenet tests/test_lenet.cpp)
+add_mlpp_test(test_embedding tests/test_embedding.cpp)
 
 
 # Train CBOW
