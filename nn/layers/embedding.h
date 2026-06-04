@@ -109,6 +109,7 @@ public:
             }
         }
 
+        // No meaningful gradient wrt to token ids.
         return Tensor(inputCache_.shape(), 0.0);
     }
 
