@@ -1,3 +1,15 @@
+# The Core Idea
+libmlpp is intentionally slow.
+
+It uses explicit CPU loops instead of vectorized matrix operations so that
+the implementation mirrors the underlying math. The goal is not production
+performance. The goal is to understand machine learning and deep learning
+from first principles.
+
+An optimized version may come later in a separate project.
+
+
+
 # Structure and Separation of concerns
 
 ### core/
