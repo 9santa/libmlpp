@@ -131,8 +131,67 @@ public:
         }
 
         Tensor gradInput({N, F}, 0.0);
-        const double M = 
 
+        // Compute gradients per feature independently
+        for (size_t f = 0; f < F; f++) {
+            double d_gamma = 0.0;
+            double d_beta = 0.0;
+            double d_mu = 0.0;
+            double d_sigma2 = 0.0;
+
+            const double invStd = invStdCache_[f]; // 1 / sqrt(sigma^2 + eps)
+            const double gamma_f = gamma_.value[f];
+
+            // PASS 1: Accumulate sums for Eq 2, 3, 5 and 6
+            for (size_t i = 0; i < N; i++) {
+                const double go = gradOutput.at(i, f); // dL/dy_i
+                const double xhat = xhatCache_.at(i, f); // xhat_i
+
+                // Eq 2 & 3: wrt gamma and beta
+                d_gamma += go * xhat;
+                d_beta += go;
+
+                // Eq 4: wrt xhat
+                const double d_xhat = go * gamma_f;
+
+                // accumulate sum for Eq 5 (wrt mu)
+                d_mu += d_xhat;
+                // accumulate sum for Eq 6 (wrt sigma^2)
+                // (x_i - mu) = xhat_i / invStd
+                const double x_minus_mu = xhat / invStd;
+                d_sigma2 += d_xhat * x_minus_mu;
+            }
+
+            // finalize Eq 5: dL/d_mu = -1 / sqrt(sigma^2 + eps) * sum(dL/d_xhat_i)
+            d_mu = d_mu * (-invStd);
+
+            // finalize Eq 6: dL/d_sigma2 = -0.5 * (sigma^2 + eps)^(-3/2) * sum(dL/d_xhat_i * (x_i - mu))
+            // invStd^3 is exactly (sigma^2 + eps)^(-3/2)
+            d_sigma2 = d_sigma2 * (-0.5 * invStd * invStd * invStd);
+
+            // apply BN's parameters gradients
+            gamma_.grad[f] += d_gamma;
+            beta_.grad[f] += d_beta;
+
+            // PASS 2: Compute final gradient wrt x_i (Eq 7)
+            for (size_t i = 0; i < N; i++) {
+                const double go = gradOutput.at(i, f);
+                const double xhat = xhatCache_.at(i, f);
+
+                // Recompute Eq 4 locally
+                const double d_xhat = go * gamma_f;
+                const double x_minus_mu = xhat / invStd;
+
+                // Eq 7 (wrt x) broken down into its three flowing gradient paths:
+                const double term1 = d_xhat * invStd;
+                const double term2 = d_sigma2 * (2.0 / N) * x_minus_mu;
+                const double term3 = d_mu / N;
+
+                gradInput.at(i, f) = term1 + term2 + term3;
+            }
+        }
+
+        return gradInput;
     }
 };
 
